@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { BookCard } from '@/components/books/BookCard'
@@ -17,7 +17,7 @@ export default function ExplorePage() {
     try {
       let q = supabase
         .from('books')
-        .select('*, profiles(prenom, ville, avatar_url)')
+        .select('*')
         .eq('status', 'actif')
         .order('created_at', { ascending: false })
 
@@ -29,10 +29,10 @@ export default function ExplorePage() {
       else if (filters.sort === 'price_desc') q = q.order('price', { ascending: false })
 
       const { data, error } = await q
-      if (error) console.error(error)
+      if (error) console.error('Supabase error:', error)
       setBooks(data || [])
     } catch (e) {
-      console.error(e)
+      console.error('Fetch error:', e)
       setBooks([])
     }
     setLoading(false)
