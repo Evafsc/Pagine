@@ -103,7 +103,7 @@ export default function AdvisorPage() {
           'X-Title': 'Pagine'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.2-3b-instruct:free',
+          model: 'mistralai/mistral-7b-instruct:free',
           messages: [
             {
               role: 'system',
