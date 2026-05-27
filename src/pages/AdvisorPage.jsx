@@ -89,33 +89,30 @@ export default function AdvisorPage() {
     setMessages(newMessages)
     setLoading(true)
     try {
-      const history = newMessages.map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.text
+      const systemPrompt = `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France. Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur. Règles : Ton chaleureux enthousiaste mais pas excessif. Recommande 2-3 livres maximum par réponse. Pour chaque livre donne une courte explication (1-2 phrases). À la fin de ta réponse inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}. Réponds toujours en français.`
+
+      const history = newMessages.slice(0, -1).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.text }]
       }))
 
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://pagine-five.vercel.app',
-          'X-Title': 'Pagine'
-        },
-        body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-0528:free',
-          messages: [
-            {
-              role: 'system',
-              content: `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France. Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur. Règles : Ton chaleureux enthousiaste mais pas excessif. Recommande 2-3 livres maximum par réponse. Pour chaque livre donne une courte explication (1-2 phrases). À la fin de ta réponse inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}. Réponds toujours en français.`
-            },
-            ...history
-          ]
-        })
-      })
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [
+              ...history,
+              { role: 'user', parts: [{ text: userMsg }] }
+            ]
+          })
+        }
+      )
 
       const data = await res.json()
-      const fullText = data.choices?.[0]?.message?.content || ''
+      const fullText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
       if (!fullText) {
         setMessages(prev => [...prev, { role: 'assistant', text: "Je n'ai pas pu générer une réponse. Réessayez !" }])
