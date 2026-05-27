@@ -102,7 +102,7 @@ export default function AdvisorPage() {
       }))
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -116,13 +116,11 @@ export default function AdvisorPage() {
       )
 
       const data = await res.json()
-      console.log('Gemini response:', JSON.stringify(data))
-
-      // Extract text from Gemini response
       const parts = data.candidates?.[0]?.content?.parts || []
       const fullText = parts.map(p => p.text || '').join('')
 
       if (!fullText) {
+        console.error('Gemini error:', JSON.stringify(data))
         setMessages(prev => [...prev, { role: 'assistant', text: "Je n'ai pas pu générer une réponse. Réessayez !" }])
         setLoading(false)
         return
