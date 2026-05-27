@@ -115,6 +115,8 @@ export default function AdvisorPage() {
       })
 
       const data = await res.json()
+console.log('Status:', res.status)
+console.log('Data:', JSON.stringify(data))
       const fullText = data.choices?.[0]?.message?.content || ''
 
       if (!fullText) {
