@@ -12,10 +12,7 @@ function InlineBookCard({ book }) {
   return (
     <Link to={`/livre/${book.id}`} className="flex items-center gap-3 bg-white border border-border rounded-lg p-3 hover:border-accent transition-colors mt-2">
       <div className="w-12 h-16 rounded overflow-hidden flex-shrink-0 bg-surface">
-        {img
-          ? <img src={img} alt={book.title} className="w-full h-full object-cover" />
-          : <BookPlaceholder title={book.title} className="w-full h-full" />
-        }
+        {img ? <img src={img} alt={book.title} className="w-full h-full object-cover" /> : <BookPlaceholder title={book.title} className="w-full h-full" />}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-ink line-clamp-1">{book.title}</p>
@@ -40,11 +37,7 @@ function Message({ msg }) {
         </div>
       )}
       <div className={`max-w-[80%] ${isUser ? '' : 'flex-1'}`}>
-        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line
-          ${isUser
-            ? 'bg-accent text-white rounded-br-sm'
-            : 'bg-white border border-border text-ink rounded-bl-sm'
-          }`}>
+        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${isUser ? 'bg-accent text-white rounded-br-sm' : 'bg-white border border-border text-ink rounded-bl-sm'}`}>
           {msg.text}
         </div>
         {msg.books?.length > 0 && (
@@ -97,30 +90,34 @@ export default function AdvisorPage() {
     setLoading(true)
     try {
       const history = newMessages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.text }]
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.text
       }))
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France. Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur. Règles : Ton chaleureux enthousiaste mais pas excessif. Recommande 2-3 livres maximum par réponse. Pour chaque livre donne une courte explication (1-2 phrases). À la fin de ta réponse inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}. Réponds toujours en français.` }]
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://pagine-five.vercel.app',
+          'X-Title': 'Pagine'
+        },
+        body: JSON.stringify({
+          model: 'mistralai/mistral-7b-instruct:free',
+          messages: [
+            {
+              role: 'system',
+              content: `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France. Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur. Règles : Ton chaleureux enthousiaste mais pas excessif. Recommande 2-3 livres maximum par réponse. Pour chaque livre donne une courte explication (1-2 phrases). À la fin de ta réponse inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}. Réponds toujours en français.`
             },
-            contents: history
-          })
-        }
-      )
+            ...history
+          ]
+        })
+      })
 
       const data = await res.json()
-      const parts = data.candidates?.[0]?.content?.parts || []
-      const fullText = parts.map(p => p.text || '').join('')
+      const fullText = data.choices?.[0]?.message?.content || ''
 
       if (!fullText) {
-        console.error('Gemini error:', JSON.stringify(data))
         setMessages(prev => [...prev, { role: 'assistant', text: "Je n'ai pas pu générer une réponse. Réessayez !" }])
         setLoading(false)
         return
@@ -183,8 +180,7 @@ export default function AdvisorPage() {
             <div className="bg-white border border-border rounded-2xl rounded-bl-sm px-4 py-3">
               <div className="flex gap-1.5">
                 {[0,1,2].map(i => (
-                  <div key={i} className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }} />
+                  <div key={i} className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
             </div>
