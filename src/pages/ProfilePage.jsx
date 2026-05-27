@@ -1,19 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Camera, MapPin, Calendar, Star, Package, Heart, LogOut, ChevronRight, BookOpen } from 'lucide-react'
+import { Camera, MapPin, Calendar, LogOut, BookOpen, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
-import { Avatar, StarRating, Badge, Spinner, BookCardSkeleton } from '@/components/ui'
+import { Avatar, StarRating, Spinner } from '@/components/ui'
 import { BookCard } from '@/components/books/BookCard'
-import { formatPrice, formatDate, modeConfig, etatConfig } from '@/lib/utils'
-import { MOCK_MY_BOOKS } from '@/lib/mockData'
+import { formatDate } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { id: paramId } = useParams()
   const { user, profile, signOut, fetchProfile } = useAuthStore()
   const navigate = useNavigate()
   const fileRef = useRef()
-  const isDemo = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-project')
 
   const isOwn = !paramId || paramId === user?.id
   const targetId = paramId || user?.id
@@ -23,41 +21,48 @@ export default function ProfilePage() {
   const [favorites, setFavorites] = useState([])
   const [tab, setTab] = useState('annonces')
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ sold: 0, exchanged: 0, given: 0, rating: null, reviewCount: 0 })
 
   useEffect(() => {
     const load = async () => {
-      if (isDemo && isOwn) {
-        setProfileData(profile || { prenom: 'Eva', ville: 'Paris', created_at: '2025-05-01T00:00:00Z' })
-        setBooks(MOCK_MY_BOOKS)
-        setStats({ sold: 12, exchanged: 7, given: 3, rating: 4.9, reviewCount: 22 })
-        setLoading(false)
-        return
-      }
-      if (!targetId) return
+      if (!targetId) { setLoading(false); return }
 
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', targetId).single()
+      // Fetch profile
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', targetId)
+        .single()
       setProfileData(p)
 
-      const { data: b } = await supabase.from('books').select('*, profiles(prenom, ville, avatar_url)')
-        .eq('seller_id', targetId).neq('status', 'archivé').order('created_at', { ascending: false })
+      // Fetch books
+      const { data: b } = await supabase
+        .from('books')
+        .select('*')
+        .eq('seller_id', targetId)
+        .neq('status', 'archivé')
+        .order('created_at', { ascending: false })
       setBooks(b || [])
 
+      // Fetch favorites (own profile only)
       if (isOwn) {
-        const { data: favs } = await supabase.from('favorites')
-          .select('books(*, profiles(prenom, ville, avatar_url))').eq('user_id', targetId)
-        setFavorites(favs?.map(f => f.books).filter(Boolean) || [])
+        const { data: favs } = await supabase
+          .from('favorites')
+          .select('book_id')
+          .eq('user_id', targetId)
+        if (favs?.length) {
+          const bookIds = favs.map(f => f.book_id)
+          const { data: favBooks } = await supabase
+            .from('books')
+            .select('*')
+            .in('id', bookIds)
+          setFavorites(favBooks || [])
+        }
       }
 
-      const { data: reviews } = await supabase.from('reviews').select('rating').eq('reviewed_id', targetId)
-      if (reviews?.length) {
-        const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-        setStats(s => ({ ...s, rating: avg, reviewCount: reviews.length }))
-      }
       setLoading(false)
     }
     load()
-  }, [targetId, isOwn, profile])
+  }, [targetId, isOwn])
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -82,7 +87,9 @@ export default function ProfilePage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen"><Spinner className="w-5 h-5 text-accent" /></div>
+    <div className="flex items-center justify-center min-h-screen">
+      <Spinner className="w-5 h-5 text-accent" />
+    </div>
   )
 
   if (!profileData) return (
@@ -93,11 +100,10 @@ export default function ProfilePage() {
   )
 
   const activeBooks = books.filter(b => b.status === 'actif')
-  const soldBooks = books.filter(b => b.status === 'vendu')
 
   return (
-    <div className="pb-safe">
-      {/* Profile header */}
+    <div className="pb-20">
+      {/* Header */}
       <div className="bg-white border-b border-border px-4 pt-6 pb-5">
         <div className="flex items-start gap-4 mb-4">
           <div className="relative">
@@ -115,7 +121,6 @@ export default function ProfilePage() {
 
           <div className="flex-1 min-w-0 pt-1">
             <h1 className="text-xl font-bold text-ink">{profileData.prenom}</h1>
-            {stats.rating && <StarRating value={stats.rating} count={stats.reviewCount} />}
             <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-muted">
               {profileData.ville && (
                 <span className="flex items-center gap-1"><MapPin size={11} />{profileData.ville}</span>
@@ -127,7 +132,7 @@ export default function ProfilePage() {
           </div>
 
           {isOwn && (
-            <button onClick={handleSignOut} className="p-2 text-muted hover:text-ink transition-colors" aria-label="Déconnexion">
+            <button onClick={handleSignOut} className="p-2 text-muted hover:text-ink transition-colors">
               <LogOut size={18} />
             </button>
           )}
@@ -136,9 +141,9 @@ export default function ProfilePage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { n: stats.sold || activeBooks.length, label: 'Annonces' },
-            { n: stats.exchanged || 0, label: 'Échanges' },
-            { n: stats.given || 0, label: 'Dons' },
+            { n: activeBooks.length, label: 'Annonces' },
+            { n: books.filter(b => b.status === 'vendu').length, label: 'Vendus' },
+            { n: favorites.length, label: 'Favoris' },
           ].map(({ n, label }) => (
             <div key={label} className="bg-surface rounded-lg py-3 text-center">
               <p className="text-lg font-bold text-ink">{n}</p>
@@ -147,7 +152,6 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Contact button (public profile) */}
         {!isOwn && (
           <Link to={`/messages?seller=${targetId}`}
             className="mt-4 flex items-center justify-center gap-2 py-2.5 border border-accent text-accent font-medium rounded text-sm hover:bg-accent-light transition-colors">
@@ -173,39 +177,33 @@ export default function ProfilePage() {
       {/* Content */}
       <div className="px-4 pt-4">
         {tab === 'annonces' && (
-          <>
-            {activeBooks.length === 0 ? (
-              <div className="text-center py-12 text-muted">
-                <BookOpen size={36} className="mx-auto mb-2 opacity-30" />
-                <p className="text-sm">{isOwn ? 'Vous n\'avez pas encore publié d\'annonce' : 'Aucune annonce active'}</p>
-                {isOwn && (
-                  <Link to="/publier" className="mt-3 inline-block text-accent text-sm font-medium hover:underline">
-                    Publier mon premier livre
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {activeBooks.map(book => (
-                  <div key={book.id} className="relative">
-                    <BookCard book={book} />
-                    {isOwn && (
-                      <div className="flex gap-1.5 mt-1.5">
-                        <Link to={`/modifier/${book.id}`}
-                          className="flex-1 py-1.5 text-center text-xs font-medium border border-border rounded text-muted hover:text-ink hover:border-ink transition-colors">
-                          Modifier
-                        </Link>
-                        <button onClick={() => deleteBook(book.id)}
-                          className="flex-1 py-1.5 text-xs font-medium border border-border rounded text-red-500 hover:border-red-300 transition-colors">
-                          Supprimer
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+          activeBooks.length === 0 ? (
+            <div className="text-center py-12 text-muted">
+              <BookOpen size={36} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">{isOwn ? "Vous n'avez pas encore publié d'annonce" : 'Aucune annonce active'}</p>
+              {isOwn && (
+                <Link to="/publier" className="mt-3 inline-block text-accent text-sm font-medium hover:underline">
+                  Publier mon premier livre
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {activeBooks.map(book => (
+                <div key={book.id} className="relative">
+                  <BookCard book={book} />
+                  {isOwn && (
+                    <div className="flex gap-1.5 mt-1.5">
+                      <button onClick={() => deleteBook(book.id)}
+                        className="flex-1 py-1.5 text-xs font-medium border border-border rounded text-red-500 hover:border-red-300 transition-colors">
+                        Supprimer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
         )}
 
         {tab === 'favoris' && isOwn && (
