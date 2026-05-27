@@ -10,10 +10,11 @@ import BookDetailPage   from '@/pages/BookDetailPage'
 import PublishPage      from '@/pages/PublishPage'
 import MessagesPage     from '@/pages/MessagesPage'
 import ProfilePage      from '@/pages/ProfilePage'
+import AdvisorPage      from '@/pages/AdvisorPage'
+import AdminPage        from '@/pages/AdminPage'
 import LoginPage        from '@/pages/auth/LoginPage'
 import RegisterPage     from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
-import AdminPage        from '@/pages/AdminPage'
 
 const NO_NAV = ['/connexion', '/inscription', '/mot-de-passe-oublie', '/admin']
 
@@ -27,6 +28,7 @@ function Layout() {
         <Route path="/"               element={<ExplorePage />} />
         <Route path="/livre/:id"      element={<BookDetailPage />} />
         <Route path="/profil/:id"     element={<ProfilePage />} />
+        <Route path="/conseiller"     element={<AdvisorPage />} />
         <Route path="/connexion"      element={<LoginPage />} />
         <Route path="/inscription"    element={<RegisterPage />} />
         <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
