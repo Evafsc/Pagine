@@ -193,21 +193,24 @@ Règles :
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex items-end gap-2 px-4 py-3 border-t border-border bg-white flex-shrink-0"
+      {/* Input zone — plus visible */}
+      <div className="px-4 py-3 border-t-2 border-accent bg-white flex-shrink-0"
         style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
-        <textarea
-          value={input}
-          onChange={e => { setInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-          placeholder="Décrivez vos goûts, votre humeur..."
-          rows={1}
-          disabled={loading}
-          className="flex-1 resize-none bg-surface border border-border rounded-2xl px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-1 focus:ring-accent transition-colors max-h-28 overflow-y-auto disabled:opacity-50"
-        />
-        <button onClick={() => send()} disabled={!input.trim() || loading}
-          className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 active:scale-95 transition-transform">
-          <Send size={16} />
-        </button>
+        <div className="flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={e => { setInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+            placeholder="Décrivez vos goûts, votre humeur du moment..."
+            rows={1}
+            disabled={loading}
+            className="flex-1 resize-none bg-surface border-2 border-accent rounded-xl px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none transition-colors max-h-28 overflow-y-auto disabled:opacity-50"
+          />
+          <button onClick={() => send()} disabled={!input.trim() || loading}
+            className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 active:scale-95 transition-transform">
+            <Send size={16} />
+          </button>
+        </div>
       </div>
     </div>
   )
