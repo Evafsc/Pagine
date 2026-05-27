@@ -103,7 +103,7 @@ export default function AdvisorPage() {
           'X-Title': 'Pagine'
         },
         body: JSON.stringify({
-          model: 'google/gemma-4-31b-it:free',
+          model: 'deepseek/deepseek-r1-0528:free',
           messages: [
             {
               role: 'system',
