@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Heart, MessageCircle, MapPin, Calendar, Share2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
-import { BookPlaceholder, Avatar, Badge, StarRating, Spinner } from '@/components/ui'
-import { formatPrice, modeConfig, etatConfig, formatDate, timeAgo } from '@/lib/utils'
+import { BookPlaceholder, Avatar, Badge, Spinner } from '@/components/ui'
+import { formatPrice, modeConfig, etatConfig, formatDate } from '@/lib/utils'
 import { getImageUrl } from '@/lib/supabase'
 
 export default function BookDetailPage() {
@@ -19,37 +19,22 @@ export default function BookDetailPage() {
 
   useEffect(() => {
     const load = async () => {
-      // Fetch book
       const { data: bookData } = await supabase
-        .from('books')
-        .select('*')
-        .eq('id', id)
-        .single()
-
+        .from('books').select('*').eq('id', id).single()
       if (!bookData) { setLoading(false); return }
       setBook(bookData)
 
-      // Fetch seller separately
       if (bookData.seller_id) {
         const { data: sellerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', bookData.seller_id)
-          .single()
+          .from('profiles').select('*').eq('id', bookData.seller_id).single()
         setSeller(sellerData)
       }
 
-      // Check favorite
       if (user) {
-        const { data: fav } = await supabase
-          .from('favorites')
-          .select('book_id')
-          .eq('user_id', user.id)
-          .eq('book_id', id)
-          .single()
+        const { data: fav } = await supabase.from('favorites')
+          .select('book_id').eq('user_id', user.id).eq('book_id', id).single()
         setIsFav(!!fav)
       }
-
       setLoading(false)
     }
     load()
@@ -67,18 +52,12 @@ export default function BookDetailPage() {
 
   const startConversation = async () => {
     if (!user) { navigate('/connexion', { state: { from: { pathname: `/livre/${id}` } } }); return }
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('book_id', id)
-      .eq('buyer_id', user.id)
-      .single()
+    const { data: existing } = await supabase.from('conversations')
+      .select('id').eq('book_id', id).eq('buyer_id', user.id).single()
     if (existing) { navigate(`/messages?conv=${existing.id}`); return }
-    const { data: conv } = await supabase
-      .from('conversations')
+    const { data: conv } = await supabase.from('conversations')
       .insert({ book_id: id, buyer_id: user.id, seller_id: book.seller_id })
-      .select()
-      .single()
+      .select().single()
     if (conv) navigate(`/messages?conv=${conv.id}`)
   }
 
@@ -103,8 +82,8 @@ export default function BookDetailPage() {
   return (
     <div className="pb-32">
       {/* Top bar */}
-      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-sm border-b border-border">
-        <button onClick={() => navigate(-1)} className="p-1.5 -ml-1.5 rounded text-ink hover:bg-surface transition-colors">
+      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white/90 border-b border-border">
+        <button onClick={() => navigate(-1)} className="p-1.5 rounded text-ink hover:bg-surface transition-colors">
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2">
@@ -123,13 +102,18 @@ export default function BookDetailPage() {
           ? <img src={getImageUrl(imgs[imgIdx])} alt={book.title} className="w-full h-full object-cover" />
           : <BookPlaceholder title={book.title} className="w-full h-full" />
         }
-        <div className="absolute top-3 left-3">
-          <Badge className={mc?.color}>{mc?.label}</Badge>
-        </div>
+        {mc && (
+          <div className="absolute top-3 left-3">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${mc.color}`}>
+              {mc.label}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="px-4 pt-5 space-y-5">
+        {/* Title + price */}
         <div>
           <div className="flex items-start justify-between gap-3">
             <h1 className="text-xl font-bold text-ink leading-tight flex-1">{book.title}</h1>
@@ -142,10 +126,10 @@ export default function BookDetailPage() {
         </div>
 
         {/* Etat */}
-        {book.etat && (
+        {book.etat && ec && (
           <div className="flex gap-2">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded ${ec?.color}`}>
-              <span className={`w-2 h-2 rounded-full ${ec?.dot}`} />
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded ${ec.color}`}>
+              <span className={`w-2 h-2 rounded-full ${ec.dot}`} />
               {book.etat}
             </span>
           </div>
@@ -162,7 +146,14 @@ export default function BookDetailPage() {
         {/* Seller */}
         {seller && (
           <div className="bg-surface rounded-lg border border-border p-4">
-            <h2 className="text-sm font-semibold text-ink mb-3">Vendeur</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-ink">Vendeur</h2>
+              {!isMine && (
+                <Link to={`/profil/${book.seller_id}`} className="text-xs text-accent font-medium hover:underline">
+                  Voir le profil →
+                </Link>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <Avatar name={seller.prenom} src={seller.avatar_url} size="md" />
               <div className="flex-1 min-w-0">
