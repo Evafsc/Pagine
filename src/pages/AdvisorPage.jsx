@@ -114,8 +114,19 @@ export default function AdvisorPage() {
           })
         }
       )
+
       const data = await res.json()
-      const fullText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      console.log('Gemini response:', JSON.stringify(data))
+
+      // Extract text from Gemini response
+      const parts = data.candidates?.[0]?.content?.parts || []
+      const fullText = parts.map(p => p.text || '').join('')
+
+      if (!fullText) {
+        setMessages(prev => [...prev, { role: 'assistant', text: "Je n'ai pas pu générer une réponse. Réessayez !" }])
+        setLoading(false)
+        return
+      }
 
       let titles = []
       let displayText = fullText
@@ -136,7 +147,7 @@ export default function AdvisorPage() {
       }
       setMessages(prev => [...prev, { role: 'assistant', text: finalText, books: foundBooks }])
     } catch (err) {
-      console.error(err)
+      console.error('Erreur:', err)
       setMessages(prev => [...prev, { role: 'assistant', text: "Désolé, je rencontre un problème technique. Réessayez dans un instant !" }])
     }
     setLoading(false)
