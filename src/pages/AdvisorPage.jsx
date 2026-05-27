@@ -96,26 +96,27 @@ export default function AdvisorPage() {
     setMessages(newMessages)
     setLoading(true)
     try {
-      const history = newMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France.
-Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur.
-Règles :
-- Ton chaleureux, enthousiaste mais pas excessif
-- Recommande 2-3 livres maximum par réponse
-- Pour chaque livre, donne une courte explication (1-2 phrases)
-- À la fin de ta réponse, inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}
-- Réponds toujours en français`,
-          messages: history
-        })
-      })
+      const history = newMessages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.text }]
+      }))
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: `Tu es un libraire bienveillant et cultivé pour Pagine, une marketplace de livres d'occasion entre particuliers en France. Ton rôle : recommander des livres selon les goûts et l'humeur de l'utilisateur. Règles : Ton chaleureux enthousiaste mais pas excessif. Recommande 2-3 livres maximum par réponse. Pour chaque livre donne une courte explication (1-2 phrases). À la fin de ta réponse inclus TOUJOURS un JSON sur une ligne séparée : {"titles":["Titre 1","Titre 2"]}. Réponds toujours en français.` }]
+            },
+            contents: history
+          })
+        }
+      )
       const data = await res.json()
-      const fullText = data.content?.[0]?.text || ''
+      const fullText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
       let titles = []
       let displayText = fullText
       try {
@@ -125,6 +126,7 @@ Règles :
           displayText = fullText.replace(jsonMatch[0], '').trim()
         }
       } catch {}
+
       const foundBooks = await searchBooksOnPagine(titles)
       let finalText = displayText
       if (foundBooks.length > 0) {
@@ -133,7 +135,8 @@ Règles :
         finalText += `\n\n💡 Ces livres ne sont pas encore sur Pagine, mais guettez les nouvelles annonces !`
       }
       setMessages(prev => [...prev, { role: 'assistant', text: finalText, books: foundBooks }])
-    } catch {
+    } catch (err) {
+      console.error(err)
       setMessages(prev => [...prev, { role: 'assistant', text: "Désolé, je rencontre un problème technique. Réessayez dans un instant !" }])
     }
     setLoading(false)
@@ -161,7 +164,7 @@ Règles :
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-surface">
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-surface" style={{ paddingBottom: '80px' }}>
         {messages.map((msg, i) => <Message key={i} msg={msg} />)}
         {loading && (
           <div className="flex justify-start mb-4">
@@ -171,7 +174,8 @@ Règles :
             <div className="bg-white border border-border rounded-2xl rounded-bl-sm px-4 py-3">
               <div className="flex gap-1.5">
                 {[0,1,2].map(i => (
-                  <div key={i} className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  <div key={i} className="w-2 h-2 bg-accent rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
             </div>
@@ -193,9 +197,8 @@ Règles :
         <div ref={bottomRef} />
       </div>
 
-      {/* Input zone — plus visible */}
       <div className="px-4 py-3 border-t-2 border-accent bg-white flex-shrink-0"
-        style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
+        style={{ paddingBottom: 'calc(76px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-end gap-2">
           <textarea
             value={input}
@@ -204,7 +207,7 @@ Règles :
             placeholder="Décrivez vos goûts, votre humeur du moment..."
             rows={1}
             disabled={loading}
-            className="flex-1 resize-none bg-surface border-2 border-accent rounded-xl px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none transition-colors max-h-28 overflow-y-auto disabled:opacity-50"
+            className="flex-1 resize-none bg-white border-2 border-accent rounded-xl px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none max-h-28 overflow-y-auto disabled:opacity-50"
           />
           <button onClick={() => send()} disabled={!input.trim() || loading}
             className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 active:scale-95 transition-transform">
