@@ -55,19 +55,19 @@ export default function ProfilePage() {
     load()
   }, [targetId, isOwn])
 
-  const searchGoogleBooks = async (q) => {
+  const searchBooks = async (q) => {
     if (!q.trim()) { setSearchResults([]); return }
     setSearching(true)
     try {
-      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8`)
+      const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&fields=key,title,author_name,cover_i`)
       const data = await res.json()
-      setSearchResults(data.items || [])
+      setSearchResults(data.docs || [])
     } catch { setSearchResults([]) }
     setSearching(false)
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => searchGoogleBooks(searchQuery), 800)
+    const timer = setTimeout(() => searchBooks(searchQuery), 800)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
@@ -90,17 +90,16 @@ export default function ProfilePage() {
     setSavingBio(false)
   }
 
-  const addCoupDeCoeur = async (googleBook) => {
+  const addCoupDeCoeur = async (book) => {
     if (!pickerPosition) return
-    const info = googleBook.volumeInfo
-    const couverture = info.imageLinks?.thumbnail?.replace('http://', 'https://') || null
+    const couverture = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null
     await supabase.from('coups_de_coeur').upsert({
       user_id: user.id,
       position: pickerPosition,
-      titre: info.title,
-      auteur: info.authors?.[0] || 'Auteur inconnu',
+      titre: book.title,
+      auteur: book.author_name?.[0] || 'Auteur inconnu',
       couverture_url: couverture,
-      google_books_id: googleBook.id
+      google_books_id: book.key
     }, { onConflict: 'user_id,position' })
     const { data: cdc } = await supabase.from('coups_de_coeur').select('*').eq('user_id', targetId).order('position')
     setCoupsDeCoeur(cdc || [])
@@ -259,7 +258,7 @@ export default function ProfilePage() {
       {/* Book Picker Modal */}
       {showBookPicker && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
-         <div className="bg-white rounded-t-2xl w-full h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-t-2xl w-full h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-border">
               <p className="font-semibold text-ink">Choisir un livre</p>
               <button onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
@@ -288,20 +287,19 @@ export default function ProfilePage() {
               )}
               <div className="space-y-2">
                 {searchResults.map(book => {
-                  const info = book.volumeInfo
-                  const cover = info.imageLinks?.thumbnail?.replace('http://', 'https://')
+                  const cover = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null
                   return (
-                    <button key={book.id} onClick={() => addCoupDeCoeur(book)}
+                    <button key={book.key} onClick={() => addCoupDeCoeur(book)}
                       className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-surface transition-colors text-left">
                       <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0 bg-surface">
                         {cover
-                          ? <img src={cover} alt={info.title} className="w-full h-full object-cover" />
-                          : <BookPlaceholder title={info.title} className="w-full h-full" />
+                          ? <img src={cover} alt={book.title} className="w-full h-full object-cover" />
+                          : <BookPlaceholder title={book.title} className="w-full h-full" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-ink line-clamp-1">{info.title}</p>
-                        <p className="text-xs text-muted">{info.authors?.[0] || 'Auteur inconnu'}</p>
+                        <p className="text-sm font-medium text-ink line-clamp-1">{book.title}</p>
+                        <p className="text-xs text-muted">{book.author_name?.[0] || 'Auteur inconnu'}</p>
                       </div>
                     </button>
                   )
