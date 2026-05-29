@@ -225,30 +225,35 @@ export default function ProfilePage() {
           {[1, 2, 3, 4].map(pos => {
             const cdc = coupsDeCoeur.find(c => c.position === pos)
             return (
-              <div key={pos} className="relative aspect-[2/3]">
-                {cdc ? (
-                  <div className="w-full h-full rounded-lg overflow-hidden border border-border group relative">
-                    {cdc.couverture_url
-                      ? <img src={cdc.couverture_url} alt={cdc.titre} className="w-full h-full object-cover" />
-                      : <BookPlaceholder title={cdc.titre} className="w-full h-full" />
-                    }
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-1.5">
-                      <p className="text-white text-[9px] font-semibold line-clamp-2 leading-tight">{cdc.titre}</p>
-                      <p className="text-white/70 text-[8px] line-clamp-1 mt-0.5">{cdc.auteur}</p>
+              <div key={pos} className="flex flex-col gap-1">
+                <div className="relative aspect-[2/3]">
+                  {cdc ? (
+                    <div className="w-full h-full rounded-lg overflow-hidden border border-border group relative">
+                      {cdc.couverture_url
+                        ? <img src={cdc.couverture_url} alt={cdc.titre} className="w-full h-full object-cover" />
+                        : <BookPlaceholder title={cdc.titre} className="w-full h-full" />
+                      }
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-1.5">
+                        <p className="text-white text-[9px] font-semibold line-clamp-2 leading-tight">{cdc.titre}</p>
+                        <p className="text-white/70 text-[8px] line-clamp-1 mt-0.5">{cdc.auteur}</p>
+                      </div>
+                      {isOwn && (
+                        <button onClick={() => removeCoupDeCoeur(pos)}
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X size={10} className="text-white" />
+                        </button>
+                      )}
                     </div>
-                    {isOwn && (
-                      <button onClick={() => removeCoupDeCoeur(pos)}
-                        className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X size={10} className="text-white" />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => { if (isOwn) { setPickerPosition(pos); setShowBookPicker(true) } }}
-                    className={`w-full h-full rounded-lg border-2 border-dashed border-border flex items-center justify-center ${isOwn ? 'hover:border-accent cursor-pointer' : 'cursor-default'}`}>
-                    {isOwn && <Plus size={20} className="text-muted" />}
-                  </button>
+                  ) : (
+                    <button
+                      onClick={() => { if (isOwn) { setPickerPosition(pos); setShowBookPicker(true) } }}
+                      className={`w-full h-full rounded-lg border-2 border-dashed border-border flex items-center justify-center ${isOwn ? 'hover:border-accent cursor-pointer' : 'cursor-default'}`}>
+                      {isOwn && <Plus size={20} className="text-muted" />}
+                    </button>
+                  )}
+                </div>
+                {cdc && (
+                  <p className="text-[9px] text-muted text-center line-clamp-1 leading-tight">{cdc.titre}</p>
                 )}
               </div>
             )
