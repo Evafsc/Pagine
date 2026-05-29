@@ -259,7 +259,7 @@ export default function ProfilePage() {
       {/* Book Picker Modal */}
       {showBookPicker && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
-         <div className="bg-white rounded-t-2xl w-full max-h-[75vh] flex flex-col pb-20" onClick={e => e.stopPropagation()}>
+         <div className="bg-white rounded-t-2xl w-full h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-border">
               <p className="font-semibold text-ink">Choisir un livre</p>
               <button onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
