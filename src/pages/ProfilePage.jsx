@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Camera, MapPin, Calendar, LogOut, BookOpen, Heart } from 'lucide-react'
+import { Camera, MapPin, Calendar, LogOut, BookOpen, Heart, Store, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { Avatar, StarRating, Spinner } from '@/components/ui'
@@ -26,7 +26,6 @@ export default function ProfilePage() {
     const load = async () => {
       if (!targetId) { setLoading(false); return }
 
-      // Fetch profile
       const { data: p } = await supabase
         .from('profiles')
         .select('*')
@@ -34,7 +33,6 @@ export default function ProfilePage() {
         .single()
       setProfileData(p)
 
-      // Fetch books
       const { data: b } = await supabase
         .from('books')
         .select('*')
@@ -43,7 +41,6 @@ export default function ProfilePage() {
         .order('created_at', { ascending: false })
       setBooks(b || [])
 
-      // Fetch favorites (own profile only)
       if (isOwn) {
         const { data: favs } = await supabase
           .from('favorites')
@@ -160,8 +157,40 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Section Découvrir — uniquement sur son propre profil */}
+      {isOwn && (
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Découvrir</p>
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <Link to="/librairies"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors border-b border-border">
+              <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
+                <Store size={16} className="text-accent" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-ink">Librairies Partenaires</p>
+                <p className="text-xs text-muted">Découvrez les librairies près de chez vous</p>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </Link>
+
+            <Link to="/librairie/rejoindre"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
+                <BookOpen size={16} className="text-accent" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-ink">Devenir Librairie Partenaire</p>
+                <p className="text-xs text-muted">Rejoignez la communauté Pagine</p>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex border-b border-border bg-white">
+      <div className="flex border-b border-border bg-white mt-2">
         {[
           { id: 'annonces', label: `Annonces (${activeBooks.length})` },
           ...(isOwn ? [{ id: 'favoris', label: `Favoris (${favorites.length})` }] : []),
