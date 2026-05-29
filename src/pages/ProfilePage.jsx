@@ -135,7 +135,6 @@ export default function ProfilePage() {
 
   return (
     <div className="pb-20">
-      {/* Header */}
       <div className="bg-white border-b border-border px-4 pt-6 pb-5">
         <div className="flex items-start gap-4 mb-4">
           <div className="relative">
@@ -164,7 +163,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Bio */}
         <div className="mb-4">
           {editingBio ? (
             <div className="flex flex-col gap-2">
@@ -196,7 +194,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
           {[
             { n: activeBooks.length, label: 'Annonces' },
@@ -230,14 +227,18 @@ export default function ProfilePage() {
             return (
               <div key={pos} className="relative aspect-[2/3]">
                 {cdc ? (
-                  <div className="w-full h-full rounded-lg overflow-hidden border border-border">
+                  <div className="w-full h-full rounded-lg overflow-hidden border border-border group relative">
                     {cdc.couverture_url
                       ? <img src={cdc.couverture_url} alt={cdc.titre} className="w-full h-full object-cover" />
                       : <BookPlaceholder title={cdc.titre} className="w-full h-full" />
                     }
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-1.5">
+                      <p className="text-white text-[9px] font-semibold line-clamp-2 leading-tight">{cdc.titre}</p>
+                      <p className="text-white/70 text-[8px] line-clamp-1 mt-0.5">{cdc.auteur}</p>
+                    </div>
                     {isOwn && (
                       <button onClick={() => removeCoupDeCoeur(pos)}
-                        className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center">
+                        className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <X size={10} className="text-white" />
                       </button>
                     )}
@@ -352,7 +353,6 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Content */}
       <div className="px-4 pt-4">
         {tab === 'annonces' && (
           activeBooks.length === 0 ? (
