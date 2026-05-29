@@ -199,7 +199,7 @@ export default function ProfilePage() {
       {/* Coups de coeur */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-ink">❤️ Coups de cœur</p>
+          <p className="text-sm font-semibold text-ink">Coups de cœur <span className="text-accent">♥</span></p>
           {isOwn && <p className="text-xs text-muted">Appuyez sur un emplacement pour modifier</p>}
         </div>
         <div className="grid grid-cols-4 gap-2">
