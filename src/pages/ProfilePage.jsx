@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Camera, MapPin, Calendar, LogOut, BookOpen, Heart, Store, ChevronRight, Edit2, Check, X, Plus } from 'lucide-react'
+import { Camera, MapPin, Calendar, LogOut, BookOpen, Heart, Store, ChevronRight, Edit2, Check, X, Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { Avatar, Spinner } from '@/components/ui'
 import { BookCard } from '@/components/books/BookCard'
-import { formatDate, modeConfig } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { getImageUrl } from '@/lib/supabase'
 import { BookPlaceholder } from '@/components/ui'
 
@@ -29,21 +29,20 @@ export default function ProfilePage() {
   const [savingBio, setSavingBio] = useState(false)
   const [showBookPicker, setShowBookPicker] = useState(false)
   const [pickerPosition, setPickerPosition] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       if (!targetId) { setLoading(false); return }
-
       const { data: p } = await supabase.from('profiles').select('*').eq('id', targetId).single()
       setProfileData(p)
       setBioValue(p?.bio || '')
-
       const { data: b } = await supabase.from('books').select('*').eq('seller_id', targetId).neq('status', 'archivé').order('created_at', { ascending: false })
       setBooks(b || [])
-
-      const { data: cdc } = await supabase.from('coups_de_coeur').select('*, books(*)').eq('user_id', targetId).order('position')
+      const { data: cdc } = await supabase.from('coups_de_coeur').select('*').eq('user_id', targetId).order('position')
       setCoupsDeCoeur(cdc || [])
-
       if (isOwn) {
         const { data: favs } = await supabase.from('favorites').select('book_id').eq('user_id', targetId)
         if (favs?.length) {
@@ -51,11 +50,26 @@ export default function ProfilePage() {
           setFavorites(favBooks || [])
         }
       }
-
       setLoading(false)
     }
     load()
   }, [targetId, isOwn])
+
+  const searchGoogleBooks = async (q) => {
+    if (!q.trim()) { setSearchResults([]); return }
+    setSearching(true)
+    try {
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8&langRestrict=fr`)
+      const data = await res.json()
+      setSearchResults(data.items || [])
+    } catch { setSearchResults([]) }
+    setSearching(false)
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => searchGoogleBooks(searchQuery), 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -76,13 +90,24 @@ export default function ProfilePage() {
     setSavingBio(false)
   }
 
-  const addCoupDeCoeur = async (book) => {
+  const addCoupDeCoeur = async (googleBook) => {
     if (!pickerPosition) return
-    await supabase.from('coups_de_coeur').upsert({ user_id: user.id, book_id: book.id, position: pickerPosition }, { onConflict: 'user_id,position' })
-    const { data: cdc } = await supabase.from('coups_de_coeur').select('*, books(*)').eq('user_id', targetId).order('position')
+    const info = googleBook.volumeInfo
+    const couverture = info.imageLinks?.thumbnail?.replace('http://', 'https://') || null
+    await supabase.from('coups_de_coeur').upsert({
+      user_id: user.id,
+      position: pickerPosition,
+      titre: info.title,
+      auteur: info.authors?.[0] || 'Auteur inconnu',
+      couverture_url: couverture,
+      google_books_id: googleBook.id
+    }, { onConflict: 'user_id,position' })
+    const { data: cdc } = await supabase.from('coups_de_coeur').select('*').eq('user_id', targetId).order('position')
     setCoupsDeCoeur(cdc || [])
     setShowBookPicker(false)
     setPickerPosition(null)
+    setSearchQuery('')
+    setSearchResults([])
   }
 
   const removeCoupDeCoeur = async (position) => {
@@ -126,7 +151,6 @@ export default function ProfilePage() {
               </>
             )}
           </div>
-
           <div className="flex-1 min-w-0 pt-1">
             <h1 className="text-xl font-bold text-ink">{profileData.prenom}</h1>
             <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted">
@@ -134,7 +158,6 @@ export default function ProfilePage() {
               <span className="flex items-center gap-1"><Calendar size={11} />Depuis {formatDate(profileData.created_at)}</span>
             </div>
           </div>
-
           {isOwn && (
             <button onClick={handleSignOut} className="p-2 text-muted hover:text-ink transition-colors">
               <LogOut size={18} />
@@ -156,7 +179,7 @@ export default function ProfilePage() {
                   <button onClick={() => { setEditingBio(false); setBioValue(profileData.bio || '') }}
                     className="p-1.5 text-muted hover:text-ink"><X size={16} /></button>
                   <button onClick={saveBio} disabled={savingBio}
-                    className="p-1.5 text-accent hover:text-accent/80"><Check size={16} /></button>
+                    className="p-1.5 text-accent"><Check size={16} /></button>
                 </div>
               </div>
             </div>
@@ -200,20 +223,18 @@ export default function ProfilePage() {
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-ink">Coups de cœur <span className="text-accent">♥</span></p>
-          {isOwn && <p className="text-xs text-muted">Appuyez sur un emplacement pour modifier</p>}
+          {isOwn && <p className="text-xs text-muted">Appuyez pour modifier</p>}
         </div>
         <div className="grid grid-cols-4 gap-2">
           {[1, 2, 3, 4].map(pos => {
             const cdc = coupsDeCoeur.find(c => c.position === pos)
-            const book = cdc?.books
-            const img = book?.images?.[0] ? getImageUrl(book.images[0]) : null
             return (
               <div key={pos} className="relative aspect-[2/3]">
-                {book ? (
+                {cdc ? (
                   <div className="w-full h-full rounded-lg overflow-hidden border border-border">
-                    {img
-                      ? <img src={img} alt={book.title} className="w-full h-full object-cover" />
-                      : <BookPlaceholder title={book.title} className="w-full h-full" />
+                    {cdc.couverture_url
+                      ? <img src={cdc.couverture_url} alt={cdc.titre} className="w-full h-full object-cover" />
+                      : <BookPlaceholder title={cdc.titre} className="w-full h-full" />
                     }
                     {isOwn && (
                       <button onClick={() => removeCoupDeCoeur(pos)}
@@ -224,7 +245,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => isOwn ? (setPickerPosition(pos), setShowBookPicker(true)) : null}
+                    onClick={() => { if (isOwn) { setPickerPosition(pos); setShowBookPicker(true) } }}
                     className={`w-full h-full rounded-lg border-2 border-dashed border-border flex items-center justify-center ${isOwn ? 'hover:border-accent cursor-pointer' : 'cursor-default'}`}>
                     {isOwn && <Plus size={20} className="text-muted" />}
                   </button>
@@ -237,34 +258,56 @@ export default function ProfilePage() {
 
       {/* Book Picker Modal */}
       {showBookPicker && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowBookPicker(false)}>
-          <div className="bg-white rounded-t-2xl w-full max-h-[70vh] overflow-y-auto p-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
+          <div className="bg-white rounded-t-2xl w-full max-h-[75vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-border">
               <p className="font-semibold text-ink">Choisir un livre</p>
-              <button onClick={() => setShowBookPicker(false)}><X size={20} className="text-muted" /></button>
+              <button onClick={() => { setShowBookPicker(false); setSearchQuery(''); setSearchResults([]) }}>
+                <X size={20} className="text-muted" />
+              </button>
             </div>
-            <p className="text-xs text-muted mb-3">Choisissez parmi tous les livres sur Pagine</p>
-            {books.length === 0 ? (
-              <p className="text-sm text-muted text-center py-6">Publiez d'abord des annonces pour les ajouter ici</p>
-            ) : (
+            <div className="px-4 py-3 border-b border-border">
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un titre, un auteur..."
+                  autoFocus
+                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {searching && <p className="text-center text-sm text-muted py-4">Recherche...</p>}
+              {!searching && searchQuery && searchResults.length === 0 && (
+                <p className="text-center text-sm text-muted py-4">Aucun résultat</p>
+              )}
+              {!searching && !searchQuery && (
+                <p className="text-center text-sm text-muted py-4">Tapez le titre d'un livre pour le rechercher</p>
+              )}
               <div className="space-y-2">
-                {books.map(book => {
-                  const img = book.images?.[0] ? getImageUrl(book.images[0]) : null
+                {searchResults.map(book => {
+                  const info = book.volumeInfo
+                  const cover = info.imageLinks?.thumbnail?.replace('http://', 'https://')
                   return (
                     <button key={book.id} onClick={() => addCoupDeCoeur(book)}
                       className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-surface transition-colors text-left">
                       <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0 bg-surface">
-                        {img ? <img src={img} alt={book.title} className="w-full h-full object-cover" /> : <BookPlaceholder title={book.title} className="w-full h-full" />}
+                        {cover
+                          ? <img src={cover} alt={info.title} className="w-full h-full object-cover" />
+                          : <BookPlaceholder title={info.title} className="w-full h-full" />
+                        }
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-ink line-clamp-1">{book.title}</p>
-                        <p className="text-xs text-muted">{book.author}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-ink line-clamp-1">{info.title}</p>
+                        <p className="text-xs text-muted">{info.authors?.[0] || 'Auteur inconnu'}</p>
                       </div>
                     </button>
                   )
                 })}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
