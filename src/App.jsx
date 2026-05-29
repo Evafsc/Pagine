@@ -12,6 +12,8 @@ import MessagesPage     from '@/pages/MessagesPage'
 import ProfilePage      from '@/pages/ProfilePage'
 import AdvisorPage      from '@/pages/AdvisorPage'
 import AdminPage        from '@/pages/AdminPage'
+import LibrairiePage    from '@/pages/LibrairiePage'
+import LibrairiesListePage from '@/pages/LibrairiesListePage'
 import LoginPage        from '@/pages/auth/LoginPage'
 import RegisterPage     from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -29,14 +31,16 @@ function Layout() {
         <Route path="/livre/:id"      element={<BookDetailPage />} />
         <Route path="/profil/:id"     element={<ProfilePage />} />
         <Route path="/conseiller"     element={<AdvisorPage />} />
+        <Route path="/librairies"     element={<LibrairiesListePage />} />
         <Route path="/connexion"      element={<LoginPage />} />
         <Route path="/inscription"    element={<RegisterPage />} />
         <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
 
-        <Route path="/publier"   element={<AuthGuard><PublishPage /></AuthGuard>} />
-        <Route path="/messages"  element={<AuthGuard><MessagesPage /></AuthGuard>} />
-        <Route path="/profil"    element={<AuthGuard><ProfilePage /></AuthGuard>} />
-        <Route path="/admin"     element={<AuthGuard><AdminPage /></AuthGuard>} />
+        <Route path="/publier"        element={<AuthGuard><PublishPage /></AuthGuard>} />
+        <Route path="/messages"       element={<AuthGuard><MessagesPage /></AuthGuard>} />
+        <Route path="/profil"         element={<AuthGuard><ProfilePage /></AuthGuard>} />
+        <Route path="/admin"          element={<AuthGuard><AdminPage /></AuthGuard>} />
+        <Route path="/librairie/rejoindre" element={<AuthGuard><LibrairiePage /></AuthGuard>} />
 
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
