@@ -17,7 +17,7 @@ export default function ExplorePage() {
     try {
       let q = supabase
         .from('books')
-        .select('*')
+        .select('*, profiles(id, prenom, ville, role)')
         .eq('status', 'actif')
         .order('created_at', { ascending: false })
 
