@@ -59,7 +59,7 @@ export default function ProfilePage() {
     if (!q.trim()) { setSearchResults([]); return }
     setSearching(true)
     try {
-      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8&langRestrict=fr`)
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8`)
       const data = await res.json()
       setSearchResults(data.items || [])
     } catch { setSearchResults([]) }
@@ -67,7 +67,7 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => searchGoogleBooks(searchQuery), 500)
+    const timer = setTimeout(() => searchGoogleBooks(searchQuery), 800)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
