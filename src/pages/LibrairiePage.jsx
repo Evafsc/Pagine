@@ -5,14 +5,15 @@ import { Store, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function LibrairiePage() {
-  const [form, setForm] = useState({ nom: '', adresse: '', ville: '', description: '', site_web: '' })
+  const [form, setForm] = useState({ nom: '', siret: '', adresse: '', ville: '', description: '', site_web: '' })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async () => {
-    if (!form.nom || !form.ville) { setError('Nom et ville obligatoires'); return }
+    if (!form.nom || !form.ville || !form.siret) { setError('Nom, ville et SIRET obligatoires'); return }
+    if (form.siret.replace(/\s/g, '').length !== 14) { setError('Le SIRET doit contenir 14 chiffres'); return }
     setLoading(true)
     setError('')
     const { data: { user } } = await supabase.auth.getUser()
@@ -21,6 +22,7 @@ export default function LibrairiePage() {
     const { error: err } = await supabase.from('librairies').insert({
       user_id: user.id,
       nom: form.nom,
+      siret: form.siret.replace(/\s/g, ''),
       adresse: form.adresse,
       ville: form.ville,
       description: form.description,
@@ -72,6 +74,14 @@ export default function LibrairiePage() {
             <input value={form.nom} onChange={e => setForm({...form, nom: e.target.value})}
               className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent"
               placeholder="Ex: Librairie du Moulin" />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-ink mb-1 block">Numéro SIRET *</label>
+            <input value={form.siret} onChange={e => setForm({...form, siret: e.target.value})}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent"
+              placeholder="14 chiffres" maxLength={17} />
+            <p className="text-xs text-muted mt-1">Votre SIRET sera vérifié avant validation</p>
           </div>
 
           <div>
