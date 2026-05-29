@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { Spinner } from '@/components/ui'
-import { Users, BookOpen, MessageCircle, TrendingUp, ArrowLeft, ShieldAlert } from 'lucide-react'
+import { Users, BookOpen, MessageCircle, TrendingUp, ArrowLeft, ShieldAlert, Store, Check, X } from 'lucide-react'
 
 const ADMIN_EMAIL = 'evadoria09@gmail.com'
 
@@ -35,6 +35,97 @@ function StatCard({ icon: Icon, label, value, sub, color, chart }) {
       <div className="text-3xl font-bold text-ink mt-2">{value ?? '—'}</div>
       {sub && <div className="text-xs text-muted mt-0.5">{sub}</div>}
       {chart && <BarChart data={chart} color={color} />}
+    </div>
+  )
+}
+
+function LibrairieRequests() {
+  const [demandes, setDemandes] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    const { data } = await supabase
+      .from('librairies')
+      .select('*')
+      .eq('statut', 'en_attente')
+      .order('created_at', { ascending: false })
+    setDemandes(data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const approuver = async (id, user_id) => {
+    await supabase.from('librairies').update({ statut: 'approuve' }).eq('id', id)
+    await supabase.from('profiles').update({ role: 'librairie' }).eq('id', user_id)
+    load()
+  }
+
+  const refuser = async (id, user_id) => {
+    await supabase.from('librairies').update({ statut: 'refuse' }).eq('id', id)
+    await supabase.from('profiles').update({ role: 'particulier' }).eq('id', user_id)
+    load()
+  }
+
+  if (loading) return <div className="text-center py-4 text-muted text-sm">Chargement...</div>
+
+  return (
+    <div className="bg-white rounded-lg border border-border p-4 mb-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Store size={16} className="text-accent" />
+        <h2 className="text-sm font-semibold text-ink">Demandes librairies</h2>
+        {demandes.length > 0 && (
+          <span className="ml-auto text-xs bg-accent text-white px-2 py-0.5 rounded-full">{demandes.length}</span>
+        )}
+      </div>
+
+      {demandes.length === 0 && (
+        <p className="text-xs text-muted text-center py-2">Aucune demande en attente</p>
+      )}
+
+      {demandes.map(d => (
+        <div key={d.id} className="border border-border rounded-xl p-3 mb-3">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-sm font-semibold text-ink">{d.nom}</p>
+              <p className="text-xs text-muted">{d.ville}{d.adresse ? ` — ${d.adresse}` : ''}</p>
+            </div>
+            <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">En attente</span>
+          </div>
+
+          {d.siret && (
+            <div className="mb-2">
+              <p className="text-xs text-muted">SIRET</p>
+              <a href={`https://www.societe.com/cgi-bin/recherche?rncs=${d.siret}`} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-accent font-medium underline">{d.siret} — Vérifier sur societe.com →</a>
+            </div>
+          )}
+
+          {d.description && (
+            <p className="text-xs text-muted mb-2 italic">"{d.description}"</p>
+          )}
+
+          {d.site_web && (
+            <a href={d.site_web} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-accent underline block mb-2">{d.site_web}</a>
+          )}
+
+          <p className="text-xs text-muted mb-3">
+            Demande reçue le {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+
+          <div className="flex gap-2">
+            <button onClick={() => approuver(d.id, d.user_id)}
+              className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-lg py-2 text-xs font-medium">
+              <Check size={13} /> Approuver
+            </button>
+            <button onClick={() => refuser(d.id, d.user_id)}
+              className="flex-1 flex items-center justify-center gap-1 bg-red-400 text-white rounded-lg py-2 text-xs font-medium">
+              <X size={13} /> Refuser
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -125,6 +216,8 @@ export default function AdminPage() {
           <p className="text-xs text-muted">Vue d'ensemble en temps réel</p>
         </div>
       </div>
+
+      <LibrairieRequests />
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard icon={Users} label="Utilisateurs" value={stats?.users} sub="comptes créés" color="#a85432" chart={stats?.usersByDay} />
