@@ -33,6 +33,7 @@ function Layout() {
         <Route path="/profil/:id"          element={<ProfilePage />} />
         <Route path="/conseiller"          element={<AdvisorPage />} />
         <Route path="/librairies"          element={<LibrairiesListePage />} />
+        <Route path="/librairie/rejoindre" element={<AuthGuard><LibrairiePage /></AuthGuard>} />
         <Route path="/librairie/:id"       element={<LibrairieVitrinePage />} />
         <Route path="/connexion"           element={<LoginPage />} />
         <Route path="/inscription"         element={<RegisterPage />} />
@@ -42,7 +43,6 @@ function Layout() {
         <Route path="/messages"            element={<AuthGuard><MessagesPage /></AuthGuard>} />
         <Route path="/profil"              element={<AuthGuard><ProfilePage /></AuthGuard>} />
         <Route path="/admin"               element={<AuthGuard><AdminPage /></AuthGuard>} />
-        <Route path="/librairie/rejoindre" element={<AuthGuard><LibrairiePage /></AuthGuard>} />
 
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
