@@ -5,18 +5,19 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Spinner } from '@/components/ui'
 
-import ExplorePage      from '@/pages/ExplorePage'
-import BookDetailPage   from '@/pages/BookDetailPage'
-import PublishPage      from '@/pages/PublishPage'
-import MessagesPage     from '@/pages/MessagesPage'
-import ProfilePage      from '@/pages/ProfilePage'
-import AdvisorPage      from '@/pages/AdvisorPage'
-import AdminPage        from '@/pages/AdminPage'
-import LibrairiePage    from '@/pages/LibrairiePage'
-import LibrairiesListePage from '@/pages/LibrairiesListePage'
-import LibrairieVitrinePage from '@/pages/LibrairieVitrinePage'
-import LoginPage        from '@/pages/auth/LoginPage'
-import RegisterPage     from '@/pages/auth/RegisterPage'
+import ExplorePage        from '@/pages/ExplorePage'
+import BookDetailPage     from '@/pages/BookDetailPage'
+import PublishPage        from '@/pages/PublishPage'
+import MessagesPage       from '@/pages/MessagesPage'
+import ProfilePage        from '@/pages/ProfilePage'
+import AdvisorPage        from '@/pages/AdvisorPage'
+import AdminPage          from '@/pages/AdminPage'
+import LibrairiePage      from '@/pages/LibrairiePage'
+import LibrairiesListePage   from '@/pages/LibrairiesListePage'
+import LibrairieVitrinePage  from '@/pages/LibrairieVitrinePage'
+import LibrairieEditPage     from '@/pages/LibrairieEditPage'
+import LoginPage          from '@/pages/auth/LoginPage'
+import RegisterPage       from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 
 const NO_NAV = ['/connexion', '/inscription', '/mot-de-passe-oublie', '/admin']
@@ -28,21 +29,22 @@ function Layout() {
   return (
     <div className="max-w-md mx-auto min-h-screen relative bg-surface">
       <Routes>
-        <Route path="/"                    element={<ExplorePage />} />
-        <Route path="/livre/:id"           element={<BookDetailPage />} />
-        <Route path="/profil/:id"          element={<ProfilePage />} />
-        <Route path="/conseiller"          element={<AdvisorPage />} />
-        <Route path="/librairies"          element={<LibrairiesListePage />} />
-        <Route path="/librairie/rejoindre" element={<AuthGuard><LibrairiePage /></AuthGuard>} />
-        <Route path="/librairie/:id"       element={<LibrairieVitrinePage />} />
-        <Route path="/connexion"           element={<LoginPage />} />
-        <Route path="/inscription"         element={<RegisterPage />} />
-        <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
+        <Route path="/"                       element={<ExplorePage />} />
+        <Route path="/livre/:id"              element={<BookDetailPage />} />
+        <Route path="/profil/:id"             element={<ProfilePage />} />
+        <Route path="/conseiller"             element={<AdvisorPage />} />
+        <Route path="/librairies"             element={<LibrairiesListePage />} />
+        <Route path="/librairie/rejoindre"    element={<AuthGuard><LibrairiePage /></AuthGuard>} />
+        <Route path="/librairie/:id"          element={<LibrairieVitrinePage />} />
+        <Route path="/librairie/:id/edit"     element={<AuthGuard><LibrairieEditPage /></AuthGuard>} />
+        <Route path="/connexion"              element={<LoginPage />} />
+        <Route path="/inscription"            element={<RegisterPage />} />
+        <Route path="/mot-de-passe-oublie"    element={<ForgotPasswordPage />} />
 
-        <Route path="/publier"             element={<AuthGuard><PublishPage /></AuthGuard>} />
-        <Route path="/messages"            element={<AuthGuard><MessagesPage /></AuthGuard>} />
-        <Route path="/profil"              element={<AuthGuard><ProfilePage /></AuthGuard>} />
-        <Route path="/admin"               element={<AuthGuard><AdminPage /></AuthGuard>} />
+        <Route path="/publier"                element={<AuthGuard><PublishPage /></AuthGuard>} />
+        <Route path="/messages"              element={<AuthGuard><MessagesPage /></AuthGuard>} />
+        <Route path="/profil"                element={<AuthGuard><ProfilePage /></AuthGuard>} />
+        <Route path="/admin"                 element={<AuthGuard><AdminPage /></AuthGuard>} />
 
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
