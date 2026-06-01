@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { MapPin, ExternalLink, Store, ArrowLeft, Globe, Phone, Clock, MessageCircle, Edit } from 'lucide-react'
+import { MapPin, Store, ArrowLeft, Globe, Phone, Clock, MessageCircle, Edit } from 'lucide-react'
 import { BookCard } from '@/components/books/BookCard'
 import { Spinner } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
@@ -54,6 +54,7 @@ export default function LibrairieVitrinePage() {
 
   return (
     <div className="pb-20">
+
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -61,14 +62,14 @@ export default function LibrairieVitrinePage() {
           <p className="font-semibold text-ink">{librairie.nom}</p>
         </div>
         {isOwner && (
-          <Link to={`/librairies/${id}/edit`} className="p-1">
+          <Link to={`/librairie/${id}/edit`} className="p-1">
             <Edit size={18} className="text-muted" />
           </Link>
         )}
       </div>
 
       {/* Bannière */}
-      <div className="relative h-40 bg-accent-light overflow-hidden">
+      <div className="h-40 bg-accent-light overflow-hidden">
         {librairie.banniere_url ? (
           <img src={librairie.banniere_url} alt="bannière" className="w-full h-full object-cover" />
         ) : (
@@ -79,18 +80,19 @@ export default function LibrairieVitrinePage() {
       </div>
 
       {/* Infos */}
-      <div className="bg-white px-4 pb-5 border-b border-border">
+      <div className="bg-white px-4 pt-4 pb-5 border-b border-border">
+
         {/* Logo + nom */}
-        <div className="flex items-end gap-4 -mt-8 mb-4">
-          <div className="w-16 h-16 rounded-2xl bg-white border-2 border-white shadow-md flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-accent-light border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
             {librairie.logo_url ? (
               <img src={librairie.logo_url} alt="logo" className="w-full h-full object-cover" />
             ) : (
               <Store size={28} className="text-accent" />
             )}
           </div>
-          <div className="flex-1 pb-1">
-            <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
               <h1 className="text-lg font-bold text-ink">{librairie.nom}</h1>
               <span className="text-xs bg-accent text-white px-2 py-0.5 rounded-full">Partenaire</span>
             </div>
@@ -165,6 +167,7 @@ export default function LibrairieVitrinePage() {
           </div>
         )}
       </div>
+
     </div>
   )
 }
