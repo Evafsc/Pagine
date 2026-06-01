@@ -5,10 +5,13 @@ import { Link } from 'react-router-dom'
 
 function LibrairieCard({ librairie }) {
   return (
-    <div className="bg-white border border-border rounded-2xl p-4 hover:border-accent transition-colors">
+    <Link to={`/librairie/${librairie.id}`} className="block bg-white border border-border rounded-2xl p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
-          <Store size={20} className="text-accent" />
+        <div className="w-12 h-12 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {librairie.logo_url
+            ? <img src={librairie.logo_url} alt="logo" className="w-full h-full object-cover" />
+            : <Store size={20} className="text-accent" />
+          }
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -22,15 +25,12 @@ function LibrairieCard({ librairie }) {
           {librairie.description && (
             <p className="text-xs text-muted mt-2 line-clamp-2">{librairie.description}</p>
           )}
-          {librairie.site_web && (
-            <a href={librairie.site_web} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 mt-2 text-xs text-accent font-medium">
-              <ExternalLink size={11} />Voir le site
-            </a>
+          {librairie.horaires && (
+            <p className="text-xs text-muted mt-1">🕐 {librairie.horaires}</p>
           )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -106,9 +106,7 @@ export default function LibrairiesListePage() {
             </div>
           )}
           {librairies.map(l => (
-            <a key={l.id}
-              href={`https://www.google.com/maps/search/${encodeURIComponent((l.nom || '') + ' ' + (l.adresse || '') + ' ' + (l.ville || ''))}`}
-              target="_blank" rel="noopener noreferrer"
+            <Link key={l.id} to={`/librairie/${l.id}`}
               className="flex items-center gap-3 bg-white border border-border rounded-2xl p-4 hover:border-accent transition-colors">
               <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
                 <MapPin size={18} className="text-accent" />
@@ -117,8 +115,8 @@ export default function LibrairiesListePage() {
                 <p className="font-semibold text-ink text-sm">{l.nom}</p>
                 <p className="text-xs text-muted">{l.ville}{l.adresse ? ` — ${l.adresse}` : ''}</p>
               </div>
-              <span className="text-xs text-accent font-medium">Voir sur Maps →</span>
-            </a>
+              <span className="text-xs text-accent font-medium">Voir →</span>
+            </Link>
           ))}
         </div>
       )}
