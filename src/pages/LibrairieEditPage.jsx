@@ -28,7 +28,7 @@ export default function LibrairieEditPage() {
         .single()
 
       if (!data || data.user_id !== user?.id) {
-        navigate(`/librairies/${id}`)
+        navigate(`/librairie/${id}`)
         return
       }
 
@@ -93,7 +93,7 @@ export default function LibrairieEditPage() {
       .eq('id', id)
     setSaving(false)
     if (error) { alert('Erreur lors de la sauvegarde'); return }
-    navigate(`/librairies/${id}`)
+    navigate(`/librairie/${id}`)
   }
 
   if (loading) return (
@@ -107,7 +107,7 @@ export default function LibrairieEditPage() {
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to={`/librairies/${id}`} className="p-1"><ArrowLeft size={20} className="text-ink" /></Link>
+          <Link to={`/librairie/${id}`} className="p-1"><ArrowLeft size={20} className="text-ink" /></Link>
           <p className="font-semibold text-ink">Modifier ma vitrine</p>
         </div>
         <button onClick={handleSave} disabled={saving}
