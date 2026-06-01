@@ -2,17 +2,6 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { MapPin, ExternalLink, Store, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-
-// Fix icônes Leaflet
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-})
 
 function LibrairieCard({ librairie }) {
   return (
@@ -48,11 +37,10 @@ function LibrairieCard({ librairie }) {
 export default function LibrairiesListePage() {
   const [librairies, setLibrairies] = useState([])
   const [loading, setLoading] = useState(true)
-  const [coords, setCoords] = useState({})
   const [tab, setTab] = useState('liste')
 
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       const { data } = await supabase
         .from('librairies')
         .select('*')
@@ -60,30 +48,9 @@ export default function LibrairiesListePage() {
         .order('created_at', { ascending: false })
       setLibrairies(data || [])
       setLoading(false)
-
-      // Géocoder les adresses
-      const newCoords = {}
-      for (const lib of data || []) {
-        if (lib.adresse && lib.ville) {
-          try {
-            const res = await window.fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(lib.adresse + ' ' + lib.ville)}&format=json&limit=1`)
-            const json = await res.json()
-            if (json[0]) newCoords[lib.id] = { lat: parseFloat(json[0].lat), lng: parseFloat(json[0].lon) }
-          } catch {}
-        } else if (lib.ville) {
-          try {
-            const res = await window.fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(lib.ville + ' France')}&format=json&limit=1`)
-            const json = await res.json()
-            if (json[0]) newCoords[lib.id] = { lat: parseFloat(json[0].lat), lng: parseFloat(json[0].lon) }
-          } catch {}
-        }
-      }
-      setCoords(newCoords)
     }
-    fetch()
+    load()
   }, [])
-
-  const libsWithCoords = librairies.filter(l => coords[l.id])
 
   return (
     <div className="min-h-screen bg-surface pb-24">
@@ -130,41 +97,29 @@ export default function LibrairiesListePage() {
       )}
 
       {tab === 'carte' && (
-        <div className="h-[calc(100vh-160px)]">
-          {libsWithCoords.length === 0 && !loading && (
-            <div className="flex items-center justify-center h-full text-muted text-sm">
-              <div className="text-center">
-                <MapPin size={40} className="mx-auto mb-3 opacity-30" />
-                <p>Aucune librairie à afficher sur la carte</p>
-              </div>
+        <div className="px-4 py-4 space-y-3">
+          {loading && <div className="text-center py-12 text-muted text-sm">Chargement...</div>}
+          {!loading && librairies.length === 0 && (
+            <div className="text-center py-12">
+              <MapPin size={40} className="text-muted mx-auto mb-3 opacity-30" />
+              <p className="text-ink font-medium">Aucune librairie à afficher</p>
             </div>
           )}
-          {libsWithCoords.length > 0 && (
-            <MapContainer
-              center={[46.603354, 1.888334]}
-              zoom={6}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {libsWithCoords.map(lib => (
-                <Marker key={lib.id} position={[coords[lib.id].lat, coords[lib.id].lng]}>
-                  <Popup>
-                    <div>
-                      <p className="font-semibold">{lib.nom}</p>
-                      <p className="text-xs text-gray-500">{lib.ville}</p>
-                      {lib.site_web && (
-                        <a href={lib.site_web} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-blue-500 underline">Voir le site</a>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          )}
+          {librairies.map(l => (
+            <a key={l.id}
+              href={`https://www.google.com/maps/search/${encodeURIComponent((l.nom || '') + ' ' + (l.adresse || '') + ' ' + (l.ville || ''))}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 bg-white border border-border rounded-2xl p-4 hover:border-accent transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
+                <MapPin size={18} className="text-accent" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-ink text-sm">{l.nom}</p>
+                <p className="text-xs text-muted">{l.ville}{l.adresse ? ` — ${l.adresse}` : ''}</p>
+              </div>
+              <span className="text-xs text-accent font-medium">Voir sur Maps →</span>
+            </a>
+          ))}
         </div>
       )}
     </div>
