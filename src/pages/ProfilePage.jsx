@@ -50,14 +50,12 @@ export default function ProfilePage() {
           const { data: favBooks } = await supabase.from('books').select('*').in('id', favs.map(f => f.book_id))
           setFavorites(favBooks || [])
         }
-        // Charger la librairie du user si elle existe
-        const { data: lib } = await supabase
+        const { data: libs } = await supabase
           .from('librairies')
           .select('id, nom, statut')
           .eq('user_id', targetId)
           .eq('statut', 'approuve')
-          .single()
-        setMaLibrairie(lib || null)
+        setMaLibrairie(libs?.[0] || null)
       }
       setLoading(false)
     }
@@ -331,7 +329,6 @@ export default function ProfilePage() {
           <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Découvrir</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
 
-            {/* Ma librairie — visible seulement si approuvée */}
             {maLibrairie && (
               <Link to={`/librairie/${maLibrairie.id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors border-b border-border">
@@ -346,7 +343,8 @@ export default function ProfilePage() {
               </Link>
             )}
 
-            <Link to="/librairies" className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors border-b border-border">
+            <Link to="/librairies"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors border-b border-border">
               <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
                 <Store size={16} className="text-accent" />
               </div>
@@ -357,9 +355,9 @@ export default function ProfilePage() {
               <ChevronRight size={16} className="text-muted" />
             </Link>
 
-            {/* Devenir partenaire — seulement si pas déjà librairie */}
             {!maLibrairie && (
-              <Link to="/librairie/rejoindre" className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors">
+              <Link to="/librairie/rejoindre"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors">
                 <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
                   <BookOpen size={16} className="text-accent" />
                 </div>
