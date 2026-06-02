@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, BookOpen } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { BookCard } from '@/components/books/BookCard'
 import { FilterBar } from '@/components/books/FilterBar'
 import { BookCardSkeleton } from '@/components/ui'
-import { BookOpen } from 'lucide-react'
 
 export default function ExplorePage() {
   const [query, setQuery] = useState('')
@@ -43,10 +42,13 @@ export default function ExplorePage() {
   return (
     <div style={{ paddingBottom: 80 }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 40, background: '#faf6f0', borderBottom: '1px solid #f0e6d3', padding: '16px 16px 12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <BookOpen size={20} color="#a85432" strokeWidth={2} />
-          <span style={{ fontFamily: 'Lora, Georgia, serif', fontWeight: 700, fontSize: 20, color: '#2c1810' }}>Pagine</span>
+
+        {/* Version B — BookOpen + texte */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <BookOpen size={24} color="#a85432" strokeWidth={1.5} />
+          <span style={{ fontFamily: 'Lora, Georgia, serif', fontWeight: 700, fontSize: 24, color: '#2c1810', letterSpacing: '-0.5px' }}>Pagine</span>
         </div>
+
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <Search size={16} color="#7c6057" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
           <input
