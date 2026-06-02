@@ -42,11 +42,10 @@ export default function ExplorePage() {
   return (
     <div style={{ paddingBottom: 80 }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 40, background: '#faf6f0', borderBottom: '1px solid #f0e6d3', padding: '16px 16px 12px' }}>
-
-        {/* Version B — BookOpen + texte */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <BookOpen size={24} color="#a85432" strokeWidth={1.5} />
-          <span style={{ fontFamily: 'Lora, Georgia, serif', fontWeight: 700, fontSize: 24, color: '#2c1810', letterSpacing: '-0.5px' }}>Pagine</span>
+        
+        {/* Version A — Logo SVG */}
+        <div style={{ marginBottom: 12 }}>
+          <img src="/pagine_logo.svg" alt="Pagine" style={{ height: 38 }} />
         </div>
 
         <div style={{ position: 'relative', marginBottom: 12 }}>
