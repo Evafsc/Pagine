@@ -6,6 +6,7 @@ import { Spinner } from '@/components/ui'
 import { Users, BookOpen, MessageCircle, TrendingUp, ArrowLeft, ShieldAlert, Store, Check, X } from 'lucide-react'
 
 const ADMIN_EMAIL = 'evadoria09@gmail.com'
+const ADMIN_ID = '2197b10d-9423-45be-823e-5773b3903359'
 
 function BarChart({ data, color = '#a85432' }) {
   if (!data?.length) return null
@@ -58,6 +59,22 @@ function LibrairieRequests() {
   const approuver = async (id, user_id) => {
     await supabase.from('librairies').update({ statut: 'approuve' }).eq('id', id)
     await supabase.from('profiles').update({ role: 'librairie' }).eq('id', user_id)
+
+    // Notification par message
+    const { data: conv } = await supabase
+      .from('conversations')
+      .insert({ buyer_id: user_id, seller_id: ADMIN_ID, book_id: null })
+      .select()
+      .single()
+
+    if (conv) {
+      await supabase.from('messages').insert({
+        conversation_id: conv.id,
+        sender_id: ADMIN_ID,
+        content: '🎉 Félicitations ! Votre librairie a été approuvée sur Pagine. Vous pouvez maintenant personnaliser votre vitrine et publier vos annonces.'
+      })
+    }
+
     load()
   }
 
