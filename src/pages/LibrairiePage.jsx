@@ -6,7 +6,7 @@ import { ArrowLeft, Store, Clock, CheckCircle } from 'lucide-react'
 import { Spinner } from '@/components/ui'
 
 export default function LibrairiePage() {
-  const { user, loading: authLoading } = useAuthStore()
+  const { user } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [existante, setExistante] = useState(null)
@@ -15,9 +15,8 @@ export default function LibrairiePage() {
   })
 
   useEffect(() => {
-    if (authLoading) return // attendre que l'auth soit prête
+    if (!user?.id) return
     const check = async () => {
-      if (!user) { setLoading(false); return }
       const { data } = await supabase
         .from('librairies')
         .select('id, nom, statut')
@@ -26,7 +25,7 @@ export default function LibrairiePage() {
       setLoading(false)
     }
     check()
-  }, [user, authLoading])
+  }, [user?.id])
 
   const handleSubmit = async () => {
     if (!form.nom || !form.ville) return alert('Nom et ville obligatoires')
@@ -50,7 +49,7 @@ export default function LibrairiePage() {
     setExistante(data?.[0] || null)
   }
 
-  if (authLoading || loading) return (
+  if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <Spinner className="w-5 h-5 text-accent" />
     </div>
@@ -58,13 +57,11 @@ export default function LibrairiePage() {
 
   return (
     <div className="pb-24 min-h-screen bg-surface">
-      {/* Header */}
       <div className="bg-white border-b border-border px-4 py-3 flex items-center gap-3">
         <Link to="/profil" className="p-1"><ArrowLeft size={20} className="text-ink" /></Link>
         <p className="font-semibold text-ink">Devenir Librairie Partenaire</p>
       </div>
 
-      {/* Déjà approuvée */}
       {existante?.statut === 'approuve' && (
         <div className="px-4 pt-6">
           <div className="bg-white rounded-2xl border border-border p-6 text-center">
@@ -79,29 +76,26 @@ export default function LibrairiePage() {
         </div>
       )}
 
-      {/* En attente */}
       {existante?.statut === 'en_attente' && (
         <div className="px-4 pt-6">
           <div className="bg-white rounded-2xl border border-border p-6 text-center">
             <Clock size={40} className="text-yellow-500 mx-auto mb-3" />
             <p className="font-semibold text-ink mb-1">Demande en cours d'examen</p>
-            <p className="text-sm text-muted">Votre demande pour <strong>{existante.nom}</strong> est en attente de validation. Vous serez notifié dès qu'elle sera traitée.</p>
+            <p className="text-sm text-muted">Votre demande pour <strong>{existante.nom}</strong> est en attente de validation.</p>
           </div>
         </div>
       )}
 
-      {/* Refusée */}
       {existante?.statut === 'refuse' && (
         <div className="px-4 pt-6">
           <div className="bg-white rounded-2xl border border-border p-6 text-center">
             <Store size={40} className="text-red-400 mx-auto mb-3" />
             <p className="font-semibold text-ink mb-1">Demande refusée</p>
-            <p className="text-sm text-muted mb-4">Votre demande pour <strong>{existante.nom}</strong> n'a pas été acceptée. Contactez-nous pour plus d'informations.</p>
+            <p className="text-sm text-muted mb-4">Votre demande pour <strong>{existante.nom}</strong> n'a pas été acceptée.</p>
           </div>
         </div>
       )}
 
-      {/* Formulaire */}
       {!existante && (
         <div className="px-4 pt-5 space-y-5">
           <div className="bg-white rounded-2xl border border-border p-4">
