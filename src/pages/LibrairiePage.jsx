@@ -15,8 +15,11 @@ export default function LibrairiePage() {
   })
 
   useEffect(() => {
-    if (!user?.id) return
     const check = async () => {
+      if (!user?.id) {
+        setLoading(false)
+        return
+      }
       const { data } = await supabase
         .from('librairies')
         .select('id, nom, statut')
@@ -25,7 +28,7 @@ export default function LibrairiePage() {
       setLoading(false)
     }
     check()
-  }, [user?.id])
+  }, [user])
 
   const handleSubmit = async () => {
     if (!form.nom || !form.ville) return alert('Nom et ville obligatoires')
@@ -96,7 +99,7 @@ export default function LibrairiePage() {
         </div>
       )}
 
-      {!existante && (
+      {!existante && !loading && (
         <div className="px-4 pt-5 space-y-5">
           <div className="bg-white rounded-2xl border border-border p-4">
             <div className="flex items-center gap-3 mb-2">
