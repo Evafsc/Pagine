@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, X, BookOpen } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { BookCard } from '@/components/books/BookCard'
 import { FilterBar } from '@/components/books/FilterBar'
@@ -42,10 +42,23 @@ export default function ExplorePage() {
   return (
     <div style={{ paddingBottom: 80 }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 40, background: '#faf6f0', borderBottom: '1px solid #f0e6d3', padding: '16px 16px 12px' }}>
-        
-        {/* Version A — Logo SVG */}
+
+        {/* Logo SVG inline */}
         <div style={{ marginBottom: 12 }}>
-          <img src="/pagine_logo.svg" alt="Pagine" style={{ height: 38 }} />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" style={{ height: 38, width: 'auto' }}>
+            <rect x="5" y="9" width="62" height="82" rx="7" fill="#5a2010" opacity="0.12" transform="translate(3,3)"/>
+            <path d="M5 13 L0 18 L0 85 L5 81 Z" fill="#6e2e18"/>
+            <rect x="5" y="9" width="62" height="82" rx="7" fill="#a85432"/>
+            <rect x="5" y="9" width="11" height="82" fill="#8a4128"/>
+            <rect x="5" y="9" width="3" height="82" fill="#7a3820"/>
+            <circle cx="10" cy="27" r="1.8" fill="#6e2e18" opacity="0.6"/>
+            <circle cx="10" cy="50" r="1.8" fill="#6e2e18" opacity="0.6"/>
+            <circle cx="10" cy="73" r="1.8" fill="#6e2e18" opacity="0.6"/>
+            <line x1="19" y1="19" x2="60" y2="19" stroke="#e8c9a0" strokeWidth="1" opacity="0.5"/>
+            <line x1="19" y1="81" x2="60" y2="81" stroke="#e8c9a0" strokeWidth="1" opacity="0.5"/>
+            <text x="37" y="68" textAnchor="middle" fontFamily="Lora, Georgia, serif" fontSize="52" fontWeight="700" fontStyle="italic" fill="white">P</text>
+            <text x="78" y="68" fontFamily="Lora, Georgia, serif" fontSize="58" fontWeight="700" fontStyle="italic" fill="#2c1810">agine</text>
+          </svg>
         </div>
 
         <div style={{ position: 'relative', marginBottom: 12 }}>
