@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { ArrowLeft, Store, Clock, CheckCircle } from 'lucide-react'
 import { Spinner } from '@/components/ui'
 
 export default function LibrairiePage() {
-  const { user } = useAuthStore()
-  const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [existante, setExistante] = useState(null)
@@ -16,7 +15,7 @@ export default function LibrairiePage() {
   })
 
   useEffect(() => {
-    if (user === undefined) return // encore en chargement
+    if (authLoading) return // attendre que l'auth soit prête
     const check = async () => {
       if (!user) { setLoading(false); return }
       const { data } = await supabase
@@ -27,7 +26,7 @@ export default function LibrairiePage() {
       setLoading(false)
     }
     check()
-  }, [user])
+  }, [user, authLoading])
 
   const handleSubmit = async () => {
     if (!form.nom || !form.ville) return alert('Nom et ville obligatoires')
@@ -51,7 +50,7 @@ export default function LibrairiePage() {
     setExistante(data?.[0] || null)
   }
 
-  if (loading || user === undefined) return (
+  if (authLoading || loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <Spinner className="w-5 h-5 text-accent" />
     </div>
