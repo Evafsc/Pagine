@@ -16,6 +16,7 @@ export default function LibrairiePage() {
   })
 
   useEffect(() => {
+    if (user === undefined) return // encore en chargement
     const check = async () => {
       if (!user) { setLoading(false); return }
       const { data } = await supabase
@@ -50,7 +51,7 @@ export default function LibrairiePage() {
     setExistante(data?.[0] || null)
   }
 
-  if (loading) return (
+  if (loading || user === undefined) return (
     <div className="flex items-center justify-center min-h-screen">
       <Spinner className="w-5 h-5 text-accent" />
     </div>
@@ -101,10 +102,9 @@ export default function LibrairiePage() {
         </div>
       )}
 
-      {/* Formulaire — seulement si pas de demande existante */}
+      {/* Formulaire */}
       {!existante && (
         <div className="px-4 pt-5 space-y-5">
-          {/* Intro */}
           <div className="bg-white rounded-2xl border border-border p-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center">
@@ -118,7 +118,6 @@ export default function LibrairiePage() {
             <p className="text-xs text-muted">Créez votre vitrine, publiez vos annonces et touchez une communauté de lecteurs passionnés.</p>
           </div>
 
-          {/* Champs */}
           {[
             { key: 'nom', label: 'Nom de la librairie *', placeholder: 'Ex: Librairie des Abbesses' },
             { key: 'adresse', label: 'Adresse', placeholder: 'Ex: 12 rue de Rivoli' },
@@ -148,9 +147,7 @@ export default function LibrairiePage() {
             />
           </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
+          <button onClick={handleSubmit} disabled={submitting}
             className="w-full bg-accent text-white py-3 rounded-xl font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2">
             {submitting ? <Spinner className="w-4 h-4" /> : <Store size={16} />}
             {submitting ? 'Envoi en cours...' : 'Soumettre ma demande'}
